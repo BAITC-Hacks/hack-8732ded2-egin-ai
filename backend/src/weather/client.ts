@@ -41,10 +41,6 @@ function addHours(date: Date, hours: number): Date {
   return new Date(date.getTime() + hours * 60 * 60 * 1000);
 }
 
-function toDateOnly(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
 function parseForecastTimestamp(timestamp: string): Date {
   const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(timestamp);
   const parsed = new Date(hasTimezone ? timestamp : `${timestamp}Z`);
@@ -63,6 +59,29 @@ function assertIssueDate(issueDate: string): Date {
     throw new Error(`Invalid issueDate: ${issueDate}`);
   }
   return parsed;
+}
+
+export function buildSingleRunUrl(
+  baseUrl: string,
+  latitude: number,
+  longitude: number,
+  issueDate: string,
+  horizonHours: number,
+  windVariable: string,
+): URL {
+  const url = new URL(baseUrl);
+  url.search = new URLSearchParams({
+    latitude: String(latitude),
+    longitude: String(longitude),
+    run: `${issueDate}T00:00`,
+    models: "ecmwf_ifs",
+    forecast_hours: String(24 + horizonHours),
+    hourly: windVariable,
+    timezone: "UTC",
+    wind_speed_unit: "ms",
+    timeformat: "iso8601",
+  }).toString();
+  return url;
 }
 
 export async function getArchivalForecast(
@@ -85,26 +104,23 @@ export async function getArchivalForecast(
   const issueStart = assertIssueDate(issueDate);
   // issueDate is the forecast issue date; the forecast window starts on the next day.
   const forecastStart = addHours(issueStart, 24);
-  const forecastEnd = addHours(forecastStart, horizonHours - 1);
   const windVariable = getWindVariable(hubHeight_m);
-  const query = new URLSearchParams({
-    latitude: String(latitude),
-    longitude: String(longitude),
-    start_date: toDateOnly(forecastStart),
-    end_date: toDateOnly(forecastEnd),
-    hourly: windVariable,
-    timezone: "UTC",
-    wind_speed_unit: "ms",
-    timeformat: "iso8601",
-  });
 
-  const historicalForecastApi = process.env.OPEN_METEO_HISTORICAL_FORECAST_URL;
-  if (historicalForecastApi === undefined || historicalForecastApi.trim().length === 0) {
-    throw new Error("OPEN_METEO_HISTORICAL_FORECAST_URL is not configured");
+  const singleRunsApi = process.env.OPEN_METEO_SINGLE_RUNS_URL;
+  if (singleRunsApi === undefined || singleRunsApi.trim().length === 0) {
+    throw new Error("OPEN_METEO_SINGLE_RUNS_URL is not configured");
   }
-  const response = await fetch(`${historicalForecastApi}?${query.toString()}`);
+  const requestUrl = buildSingleRunUrl(
+    singleRunsApi,
+    latitude,
+    longitude,
+    issueDate,
+    horizonHours,
+    windVariable,
+  );
+  const response = await fetch(requestUrl);
   if (!response.ok) {
-    throw new Error(`Open-Meteo Historical Forecast API returned HTTP ${response.status}`);
+    throw new Error(`Open-Meteo Single Runs API returned HTTP ${response.status}`);
   }
 
   const payload: unknown = await response.json();
@@ -117,7 +133,7 @@ export async function getArchivalForecast(
       windSpeed_ms: parsed.hourly.windSpeed[index],
     }))
     .filter((point: ArchivalForecastPoint) => {
-      const timestamp = Date.parse(point.timestamp);
-      return timestamp >= forecastStart.getTime() && timestamp < forecastEndTimestamp;
+    const timestamp = Date.parse(point.timestamp);
+    return timestamp >= forecastStart.getTime() && timestamp < forecastEndTimestamp;
   });
 }

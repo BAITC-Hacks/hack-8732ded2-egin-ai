@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatasetDropzone } from "@/features/dataset-upload/ui/DatasetDropzone";
 import type { ForecastFormValues } from "../model/types";
 
 interface ForecastFormProps {
@@ -72,6 +73,7 @@ export function ForecastForm({ values, isLoading, error, onChange, onSubmit }: F
             <Field label={t("form.ratedPower")} type="number" step="1" value={values.ratedPower_kW} onChange={(value) => onChange("ratedPower_kW", value)} />
           </div>
           <p className="mt-3 text-xs text-muted-foreground">{t("form.sameSite")}</p>
+          <div className="mt-4 space-y-2 rounded-xl bg-white p-3"><p className="text-xs font-semibold">{t("upload.title")}</p><DatasetDropzone turbineId="turbine-1" /><DatasetDropzone turbineId="turbine-2" /></div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">

@@ -39,7 +39,7 @@ export interface WalkForwardTurbineMetrics {
 
 export interface WalkForwardResponse {
   status: "success";
-  source: "open-meteo-historical-forecast";
+  source: "open-meteo-single-run";
   period: "2026-01-31 to 2026-02-28";
   powerScale: "normalized";
   dailyForecasts: DailyForecastResult[];

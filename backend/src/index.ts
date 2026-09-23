@@ -7,6 +7,7 @@ import agentRouter from "./routes/agent.js";
 import businessImpactRouter from "./routes/businessImpact.js";
 import calibrationRouter from "./routes/calibration.js";
 import datasetRouter from "./routes/dataset.js";
+import datasetUploadRouter from "./routes/datasetUpload.js";
 import walkForwardRouter from "./routes/walkForward.js";
 
 dotenv.config({
@@ -43,6 +44,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/dataset", datasetRouter);
+app.use("/api/dataset/upload", datasetUploadRouter);
 app.use("/api/calibrate", calibrationRouter);
 app.use("/api/walk-forward-simulate", walkForwardRouter);
 app.use("/api/agent", agentRouter);
