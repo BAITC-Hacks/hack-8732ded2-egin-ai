@@ -60,12 +60,9 @@ async function simulateTurbine(
   horizonHours: number,
 ): Promise<{
   dailyForecasts: DailyForecastResult[];
-  metrics: WalkForwardTurbineMetrics;
+  metrics: WalkForwardTurbineMetrics | null;
 }> {
   const actualByHour = getActualByHour(testPoints);
-  if (actualByHour.size === 0) {
-    throw new Error(`${turbineId} has no hourly rows in the February 2026 held-out test period`);
-  }
 
   const pairs: PredictionPair[] = [];
   const dailyForecasts: DailyForecastResult[] = [];
@@ -99,16 +96,13 @@ async function simulateTurbine(
     }
   }
 
-  if (pairs.length === 0) {
-    throw new Error(`${turbineId} produced no comparable hourly forecast/test pairs`);
-  }
   if (modelParameters === undefined) {
     throw new Error(`${turbineId} did not produce calibrated parameters`);
   }
 
   return {
     dailyForecasts,
-    metrics: {
+    metrics: pairs.length === 0 ? null : {
       parameters: modelParameters,
       metrics: calculateMetrics(pairs),
       evaluatedHours: pairs.length,
@@ -125,7 +119,7 @@ export async function runWalkForwardSimulation(
 
   const datasets = await loadAllDatasets();
   const dailyForecasts: DailyForecastResult[] = [];
-  const overallMetrics = {} as WalkForwardResponse["overallMetrics"];
+  const overallMetrics: Partial<Record<TurbineId, WalkForwardTurbineMetrics>> = {};
 
   for (const turbineId of TURBINE_IDS) {
     const result = await simulateTurbine(
@@ -136,15 +130,21 @@ export async function runWalkForwardSimulation(
       config.horizonHours,
     );
     dailyForecasts.push(...result.dailyForecasts);
-    overallMetrics[turbineId] = result.metrics;
+    if (result.metrics !== null) {
+      overallMetrics[turbineId] = result.metrics;
+    }
   }
 
+  const metricsAvailable = TURBINE_IDS.every((turbineId) => overallMetrics[turbineId] !== undefined);
   return {
     status: "success",
     source: "open-meteo-single-run",
     period: "2026-01-31 to 2026-02-28",
     powerScale: "normalized",
     dailyForecasts,
-    overallMetrics,
+    overallMetrics: metricsAvailable
+      ? overallMetrics as Record<TurbineId, WalkForwardTurbineMetrics>
+      : null,
+    metricsStatus: metricsAvailable ? "actual_data_available" : "actual_data_unavailable",
   };
 }

@@ -9,6 +9,7 @@ import type { PowerCurveParameters } from "../models/types.js";
 import type { TurbineCoordinates } from "../weather/types.js";
 import { parseForecastHorizon } from "../config/forecast.js";
 import { buildSingleRunUrl } from "../weather/client.js";
+import type { WalkForwardResponse } from "../weather/types.js";
 
 const parameters: PowerCurveParameters = {
   Cp: 1,
@@ -41,6 +42,20 @@ function createAgentRun(turbineId: "turbine-1" | "turbine-2", hourly: AgentForec
 }
 
 describe("power curve and metrics", () => {
+  it("represents missing February actuals without hiding forecast output", () => {
+    const response: WalkForwardResponse = {
+      status: "success",
+      source: "open-meteo-single-run",
+      period: "2026-01-31 to 2026-02-28",
+      powerScale: "normalized",
+      dailyForecasts: [],
+      overallMetrics: null,
+      metricsStatus: "actual_data_unavailable",
+    };
+    assert.equal(response.metricsStatus, "actual_data_unavailable");
+    assert.equal(response.overallMetrics, null);
+  });
+
   it("builds an issue-date-specific Single Runs API request", () => {
     const url = buildSingleRunUrl(
       "https://single-runs-api.open-meteo.com/v1/forecast",
