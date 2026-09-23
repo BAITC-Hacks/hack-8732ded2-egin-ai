@@ -4,8 +4,6 @@ import type {
   OpenMeteoHourlyResponse,
 } from "./types.js";
 
-const HISTORICAL_FORECAST_API = "https://historical-forecast-api.open-meteo.com/v1/forecast";
-
 function getWindVariable(hubHeight_m: HubHeightMeters): string {
   return `wind_speed_${hubHeight_m}m`;
 }
@@ -89,7 +87,11 @@ export async function getArchivalForecast(
     timeformat: "iso8601",
   });
 
-  const response = await fetch(`${HISTORICAL_FORECAST_API}?${query.toString()}`);
+  const historicalForecastApi = process.env.OPEN_METEO_HISTORICAL_FORECAST_URL;
+  if (historicalForecastApi === undefined || historicalForecastApi.trim().length === 0) {
+    throw new Error("OPEN_METEO_HISTORICAL_FORECAST_URL is not configured");
+  }
+  const response = await fetch(`${historicalForecastApi}?${query.toString()}`);
   if (!response.ok) {
     throw new Error(`Open-Meteo Historical Forecast API returned HTTP ${response.status}`);
   }

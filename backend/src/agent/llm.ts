@@ -1,7 +1,5 @@
 import { buildAnalysisPrompt, parseAnalysis, type AnalysisPromptInput, type ParsedAnalysis } from "./prompts.js";
 
-const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -46,7 +44,11 @@ export async function analyzeWithOpenAi(input: AnalysisPromptInput): Promise<Par
     throw new Error("OPENAI_API_KEY is not configured");
   }
 
-  const response = await fetch(OPENAI_RESPONSES_URL, {
+  const responsesUrl = process.env.OPENAI_RESPONSES_URL;
+  if (responsesUrl === undefined || responsesUrl.trim().length === 0) {
+    throw new Error("OPENAI_RESPONSES_URL is not configured");
+  }
+  const response = await fetch(responsesUrl, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
