@@ -2,43 +2,13 @@ import { Router, type Request, type Response } from "express";
 import { loadAllDatasets, type TurbineId } from "../agent/tools/dataset.js";
 import { runAgentCycle } from "../agent/loop.js";
 import type { AgentRunConfig } from "../agent/types.js";
-import type { HubHeightMeters, TurbineCoordinates } from "../weather/types.js";
+import { getTurbineCoordinatesFromEnv, isTurbineId, parseTurbineCoordinates } from "../config/turbines.js";
+import type { TurbineCoordinates } from "../weather/types.js";
 
 const router = Router();
-const TURBINE_IDS: readonly TurbineId[] = ["turbine-1", "turbine-2"];
-const HUB_HEIGHTS: readonly HubHeightMeters[] = [10, 80, 100, 120, 180, 200];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
-}
-
-function parseCoordinates(value: unknown, turbineId: TurbineId): TurbineCoordinates {
-  if (!isRecord(value)) {
-    throw new Error(`Coordinates are required for ${turbineId}`);
-  }
-  const latitude = value.latitude;
-  const longitude = value.longitude;
-  const hubHeight = value.hubHeight_m ?? 80;
-  if (
-    typeof latitude !== "number" || !Number.isFinite(latitude) ||
-    typeof longitude !== "number" || !Number.isFinite(longitude) ||
-    typeof hubHeight !== "number" || !HUB_HEIGHTS.includes(hubHeight as HubHeightMeters)
-  ) {
-    throw new Error(`Invalid coordinates for ${turbineId}`);
-  }
-  return { latitude, longitude, hubHeight_m: hubHeight as HubHeightMeters };
-}
-
-function getCoordinatesFromEnv(turbineId: TurbineId): TurbineCoordinates {
-  const prefix = turbineId === "turbine-1" ? "TURBINE_1" : "TURBINE_2";
-  return parseCoordinates(
-    {
-      latitude: Number(process.env[`${prefix}_LATITUDE`]),
-      longitude: Number(process.env[`${prefix}_LONGITUDE`]),
-      hubHeight_m: Number(process.env.WIND_HUB_HEIGHT_M ?? 80),
-    },
-    turbineId,
-  );
 }
 
 function parseRequest(body: unknown): Omit<AgentRunConfig, "trainPoints"> {
@@ -48,7 +18,7 @@ function parseRequest(body: unknown): Omit<AgentRunConfig, "trainPoints"> {
   const turbineId = body.turbineId;
   const issueDate = body.issueDate;
   const horizon = body.horizon ?? 48;
-  if (typeof turbineId !== "string" || !TURBINE_IDS.includes(turbineId as TurbineId)) {
+  if (!isTurbineId(turbineId)) {
     throw new Error("turbineId must be turbine-1 or turbine-2");
   }
   if (typeof issueDate !== "string") {
@@ -59,10 +29,10 @@ function parseRequest(body: unknown): Omit<AgentRunConfig, "trainPoints"> {
   }
   const coordinateInput = isRecord(body.coordinates) ? body.coordinates[turbineId] : undefined;
   const coordinates = coordinateInput === undefined
-    ? getCoordinatesFromEnv(turbineId as TurbineId)
-    : parseCoordinates(coordinateInput, turbineId as TurbineId);
+    ? getTurbineCoordinatesFromEnv(turbineId)
+    : parseTurbineCoordinates(coordinateInput, turbineId);
   return {
-    turbineId: turbineId as TurbineId,
+    turbineId,
     issueDate,
     horizonHours: horizon,
     coordinates,

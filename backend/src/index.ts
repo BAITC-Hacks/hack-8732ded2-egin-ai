@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import express from "express";
 import { logger } from "./logger.js";
 import agentRouter from "./routes/agent.js";
+import businessImpactRouter from "./routes/businessImpact.js";
 import calibrationRouter from "./routes/calibration.js";
 import datasetRouter from "./routes/dataset.js";
 import walkForwardRouter from "./routes/walkForward.js";
@@ -35,6 +36,7 @@ app.use("/api/dataset", datasetRouter);
 app.use("/api/calibrate", calibrationRouter);
 app.use("/api/walk-forward-simulate", walkForwardRouter);
 app.use("/api/agent", agentRouter);
+app.use("/api/wind-farm", businessImpactRouter);
 
 app.listen(port, () => {
   logger.info("Backend started", {
