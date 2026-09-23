@@ -1,6 +1,7 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
+import { logger } from "./logger.js";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
@@ -13,5 +14,8 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Backend running at http://localhost:${port}`);
+  logger.info("Backend started", {
+    port,
+    url: `http://localhost:${port}`,
+  });
 });
