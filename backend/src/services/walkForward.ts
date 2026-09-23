@@ -1,10 +1,8 @@
 import type { HistoricalDataPoint, TurbineId } from "../agent/tools/dataset.js";
 import { loadAllDatasets } from "../agent/tools/dataset.js";
-import { calibrateTurbine } from "./calibration.js";
 import { calculateMetrics } from "../models/metrics.js";
-import { predictPower } from "../models/powerCurve.js";
 import type { PredictionPair } from "../models/types.js";
-import { getArchivalForecast } from "../weather/client.js";
+import { runAgentCycle } from "../agent/loop.js";
 import type {
   DailyForecastResult,
   ForecastPoint,
@@ -54,16 +52,6 @@ function getEvaluationWindow(issueDate: string): { from: number; to: number } {
   };
 }
 
-function createForecastPoints(
-  weatherPoints: Awaited<ReturnType<typeof getArchivalForecast>>,
-  parameters: WalkForwardTurbineMetrics["parameters"],
-): ForecastPoint[] {
-  return weatherPoints.map((point) => ({
-    ...point,
-    predictedPower: predictPower(point.windSpeed_ms, parameters),
-  }));
-}
-
 async function simulateTurbine(
   turbineId: TurbineId,
   coordinates: TurbineCoordinates,
@@ -74,7 +62,6 @@ async function simulateTurbine(
   dailyForecasts: DailyForecastResult[];
   metrics: WalkForwardTurbineMetrics;
 }> {
-  const calibration = calibrateTurbine(turbineId, trainPoints);
   const actualByHour = getActualByHour(testPoints);
   if (actualByHour.size === 0) {
     throw new Error(`${turbineId} has no hourly rows in the February 2026 held-out test period`);
@@ -82,15 +69,17 @@ async function simulateTurbine(
 
   const pairs: PredictionPair[] = [];
   const dailyForecasts: DailyForecastResult[] = [];
+  let modelParameters: WalkForwardTurbineMetrics["parameters"] | undefined;
   for (const issueDate of getIssueDates()) {
-    const weather = await getArchivalForecast(
-      coordinates.latitude,
-      coordinates.longitude,
+    const agentRun = await runAgentCycle({
+      turbineId,
       issueDate,
       horizonHours,
-      coordinates.hubHeight_m,
-    );
-    const forecast = createForecastPoints(weather, calibration.parameters);
+      coordinates,
+      trainPoints,
+    });
+    modelParameters = agentRun.parameters;
+    const forecast: ForecastPoint[] = agentRun.hourly;
     dailyForecasts.push({ issueDate, turbineId, horizonHours, forecast });
 
     const evaluationWindow = getEvaluationWindow(issueDate);
@@ -113,11 +102,14 @@ async function simulateTurbine(
   if (pairs.length === 0) {
     throw new Error(`${turbineId} produced no comparable hourly forecast/test pairs`);
   }
+  if (modelParameters === undefined) {
+    throw new Error(`${turbineId} did not produce calibrated parameters`);
+  }
 
   return {
     dailyForecasts,
     metrics: {
-      parameters: calibration.parameters,
+      parameters: modelParameters,
       metrics: calculateMetrics(pairs),
       evaluatedHours: pairs.length,
     },

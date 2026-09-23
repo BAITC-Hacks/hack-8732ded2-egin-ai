@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import { logger } from "./logger.js";
+import agentRouter from "./routes/agent.js";
 import calibrationRouter from "./routes/calibration.js";
 import datasetRouter from "./routes/dataset.js";
 import walkForwardRouter from "./routes/walkForward.js";
@@ -33,6 +34,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/dataset", datasetRouter);
 app.use("/api/calibrate", calibrationRouter);
 app.use("/api/walk-forward-simulate", walkForwardRouter);
+app.use("/api/agent", agentRouter);
 
 app.listen(port, () => {
   logger.info("Backend started", {
