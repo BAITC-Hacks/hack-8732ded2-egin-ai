@@ -45,6 +45,15 @@ function toDateOnly(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+function parseForecastTimestamp(timestamp: string): Date {
+  const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(timestamp);
+  const parsed = new Date(hasTimezone ? timestamp : `${timestamp}Z`);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error(`Open-Meteo response contains invalid timestamp: ${timestamp}`);
+  }
+  return parsed;
+}
+
 function assertIssueDate(issueDate: string): Date {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(issueDate)) {
     throw new Error("issueDate must use YYYY-MM-DD format");
@@ -102,7 +111,7 @@ export async function getArchivalForecast(
 
   return parsed.hourly.time
     .map((timestamp: string, index: number): ArchivalForecastPoint => ({
-      timestamp: new Date(timestamp).toISOString(),
+      timestamp: parseForecastTimestamp(timestamp).toISOString(),
       windSpeed_ms: parsed.hourly.windSpeed[index],
     }))
     .filter((point: ArchivalForecastPoint) => {

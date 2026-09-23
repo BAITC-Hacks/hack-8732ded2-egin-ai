@@ -3,6 +3,7 @@ import { loadAllDatasets, type TurbineId } from "../agent/tools/dataset.js";
 import { runAgentCycle } from "../agent/loop.js";
 import type { AgentRunConfig } from "../agent/types.js";
 import { getTurbineCoordinatesFromEnv, isTurbineId, parseTurbineCoordinates } from "../config/turbines.js";
+import { parseForecastHorizon } from "../config/forecast.js";
 import type { TurbineCoordinates } from "../weather/types.js";
 
 const router = Router();
@@ -24,9 +25,7 @@ function parseRequest(body: unknown): Omit<AgentRunConfig, "trainPoints"> {
   if (typeof issueDate !== "string") {
     throw new Error("issueDate must use YYYY-MM-DD format");
   }
-  if (typeof horizon !== "number" || !Number.isInteger(horizon) || horizon < 1 || horizon > 48) {
-    throw new Error("horizon must be an integer between 1 and 48");
-  }
+  const horizonHours = parseForecastHorizon(horizon, "horizon");
   const coordinateInput = isRecord(body.coordinates) ? body.coordinates[turbineId] : undefined;
   const coordinates = coordinateInput === undefined
     ? getTurbineCoordinatesFromEnv(turbineId)
@@ -34,7 +33,7 @@ function parseRequest(body: unknown): Omit<AgentRunConfig, "trainPoints"> {
   return {
     turbineId,
     issueDate,
-    horizonHours: horizon,
+    horizonHours,
     coordinates,
   };
 }

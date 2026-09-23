@@ -3,6 +3,7 @@ import { loadAllDatasets, type TurbineId } from "../agent/tools/dataset.js";
 import { runAgentCycle } from "../agent/loop.js";
 import { isTurbineId, getTurbineCoordinatesFromEnv, parseTurbineCoordinates } from "../config/turbines.js";
 import { calculateWindFarmImpact } from "../business/impact.js";
+import { parseForecastHorizon } from "../config/forecast.js";
 import type {
   WindFarmCommercialConfig,
   WindFarmImpactInput,
@@ -39,11 +40,7 @@ function parseIssueDate(value: unknown): string {
 }
 
 function parseHorizon(value: unknown): number {
-  const horizon = value ?? 48;
-  if (typeof horizon !== "number" || !Number.isInteger(horizon) || horizon < 1 || horizon > 48) {
-    throw new Error("horizon must be an integer between 1 and 48");
-  }
-  return horizon;
+  return parseForecastHorizon(value ?? 48, "horizon");
 }
 
 function parseTurbineConfigs(value: unknown): WindFarmTurbineConfig[] {
