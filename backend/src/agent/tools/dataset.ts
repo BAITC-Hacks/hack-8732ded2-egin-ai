@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 export type TurbineId = "turbine-1" | "turbine-2";
 
@@ -47,7 +48,10 @@ const MAX_WIND_SPEED_MS = 40;
 const MIN_TEMPERATURE_C = -50;
 const MAX_TEMPERATURE_C = 50;
 
-const DEFAULT_DATA_DIRECTORY = path.resolve(process.cwd(), "src", "data");
+const DEFAULT_DATA_DIRECTORY = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../../../src/data",
+);
 
 const FILES_BY_TURBINE: Record<TurbineId, string> = {
   "turbine-1": "turbine_first.csv",

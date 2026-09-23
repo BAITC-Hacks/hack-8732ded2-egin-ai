@@ -1,8 +1,13 @@
-import "dotenv/config";
+import { fileURLToPath } from "node:url";
 import cors from "cors";
+import dotenv from "dotenv";
 import express from "express";
 import { logger } from "./logger.js";
 import datasetRouter from "./routes/dataset.js";
+
+dotenv.config({
+  path: fileURLToPath(new URL("../.env", import.meta.url)),
+});
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
