@@ -9,7 +9,7 @@ import {
 const router = Router();
 
 function isTurbineId(value: string): value is TurbineId {
-  return value === "turbine_first" || value === "turbine_second";
+  return value === "turbine-1" || value === "turbine-2";
 }
 
 router.get(

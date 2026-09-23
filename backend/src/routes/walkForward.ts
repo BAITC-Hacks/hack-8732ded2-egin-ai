@@ -70,23 +70,34 @@ function parseRequest(body: unknown): WalkForwardConfig {
   }
 
   const horizonValue = requestBody.horizonHours ?? 48;
-  if (typeof horizonValue !== "number" || !Number.isInteger(horizonValue)) {
-    throw new Error("horizonHours must be an integer");
+  if (
+    typeof horizonValue !== "number" ||
+    !Number.isInteger(horizonValue) ||
+    horizonValue < 24 ||
+    horizonValue > 48
+  ) {
+    throw new Error("horizonHours must be an integer between 24 and 48");
   }
   return { coordinates, horizonHours: horizonValue };
 }
 
 router.post("/", async (request: Request, response: Response): Promise<void> => {
+  let config: WalkForwardConfig;
   try {
-    const config = parseRequest(request.body as unknown);
+    config = parseRequest(request.body as unknown);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown walk-forward error";
+    console.error(`[walk-forward] ${message}`);
+    response.status(400).json({ status: "error", error: message });
+    return;
+  }
+
+  try {
     response.json(await runWalkForwardSimulation(config));
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown walk-forward error";
-    const status = message.startsWith("Provide coordinates") || message.startsWith("Missing coordinates")
-      ? 400
-      : 500;
     console.error(`[walk-forward] ${message}`);
-    response.status(status).json({ status: "error", error: message });
+    response.status(500).json({ status: "error", error: message });
   }
 });
 
