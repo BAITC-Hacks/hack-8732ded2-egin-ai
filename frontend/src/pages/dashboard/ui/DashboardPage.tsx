@@ -2,7 +2,6 @@ import { useState } from "react";
 import type { ReactElement } from "react";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
-import { Activity, BarChart3, Database, LayoutDashboard, Settings2 } from "lucide-react";
 import { ForecastForm } from "@/features/forecast-run/ui/ForecastForm";
 import { initialForecastFormValues, type ForecastFormValues } from "@/features/forecast-run/model/types";
 import { requestWindFarmImpact } from "@/shared/api/windFarm";
@@ -28,7 +27,7 @@ function toNumber(value: string, label: string): number {
 }
 
 export function DashboardPage(): ReactElement {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [values, setValues] = useState<ForecastFormValues>(initialForecastFormValues);
   const [result, setResult] = useState<WindFarmImpactResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -65,16 +64,9 @@ export function DashboardPage(): ReactElement {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6f8fb] text-slate-900">
-      <header className="border-b bg-white/90 px-4 py-4 backdrop-blur sm:px-8"><div className="mx-auto flex max-w-[1500px] items-center justify-between"><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-cyan-300"><Activity className="h-5 w-5" /></div><div><p className="text-sm font-bold tracking-tight">{t("app.title")}</p><p className="text-xs text-muted-foreground">{t("app.subtitle")}</p></div></div><div className="flex items-center gap-4 text-sm text-muted-foreground"><span className="hidden items-center gap-2 md:flex"><span className="h-2 w-2 rounded-full bg-emerald-500" /> {t("app.apiConnected")}</span><select aria-label="Language" className="rounded-lg border bg-white px-2 py-1.5 text-xs font-medium text-slate-700" value={i18n.language} onChange={(event) => { const language = event.target.value; window.localStorage.setItem("windcast-language", language); void i18n.changeLanguage(language); }}><option value="ru">{t("languages.ru")}</option><option value="en">{t("languages.en")}</option><option value="kk">{t("languages.kk")}</option></select></div></div></header>
-      <div className="mx-auto grid max-w-[1500px] gap-6 p-4 sm:p-8 lg:grid-cols-[280px_1fr]">
-        <aside className="space-y-4"><div className="rounded-2xl border bg-slate-950 p-3 text-slate-300"><NavItem icon={<LayoutDashboard className="h-4 w-4" />} label={t("nav.dashboard")} active /><NavItem icon={<BarChart3 className="h-4 w-4" />} label={t("nav.forecast")} /><NavItem icon={<Database className="h-4 w-4" />} label={t("nav.dataQuality")} /><NavItem icon={<Settings2 className="h-4 w-4" />} label={t("nav.calibration")} /></div><div className="rounded-2xl border bg-white p-4"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("mode.label")}</p><p className="mt-2 font-semibold">{t("mode.value")}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{t("mode.description")}</p></div><ForecastForm values={values} isLoading={isLoading} error={error} onChange={updateValue} onSubmit={() => void runForecast()} /></aside>
-        <main className="space-y-6"><div className="flex flex-col justify-between gap-2 md:flex-row md:items-end"><div><p className="text-sm font-medium text-cyan-700">{t("dashboard.overview")}</p><h1 className="mt-1 text-3xl font-bold tracking-tight">{t("dashboard.title")}</h1><p className="mt-2 text-sm text-muted-foreground">{t("dashboard.description")}</p></div>{result !== null && <span className="rounded-full bg-white px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm">{t("dashboard.issueDate")}: {result.issueDate}</span>}</div><WindFarmDashboard result={result} /></main>
-      </div>
+    <div className="grid gap-6 xl:grid-cols-[280px_1fr]">
+      <ForecastForm values={values} isLoading={isLoading} error={error} onChange={updateValue} onSubmit={() => void runForecast()} />
+      <section className="space-y-6"><div className="flex flex-col justify-between gap-2 md:flex-row md:items-end"><div><p className="text-sm font-medium text-cyan-700">{t("dashboard.overview")}</p><h1 className="mt-1 text-3xl font-bold tracking-tight">{t("dashboard.title")}</h1><p className="mt-2 text-sm text-muted-foreground">{t("dashboard.description")}</p></div>{result !== null && <span className="rounded-full bg-white px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm">{t("dashboard.issueDate")}: {result.issueDate}</span>}</div><WindFarmDashboard result={result} /></section>
     </div>
   );
 }
-
-interface NavItemProps { icon: ReactElement; label: string; active?: boolean; }
-
-function NavItem({ icon, label, active = false }: NavItemProps): ReactElement { return <div className={`mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm ${active ? "bg-white/10 text-white" : "text-slate-400"}`}>{icon}<span>{label}</span></div>; }
