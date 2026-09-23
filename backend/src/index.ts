@@ -14,8 +14,18 @@ dotenv.config({
 });
 
 const app = express();
-const port = Number(process.env.PORT ?? 3000);
-const allowedOrigins = ["http://localhost:5173", process.env.FRONTEND_URL].filter(
+const rawPort = process.env.PORT;
+if (rawPort === undefined || rawPort.trim().length === 0) {
+  throw new Error("PORT is not configured. Add PORT to backend/.env");
+}
+const port = Number(rawPort);
+if (!Number.isInteger(port) || port < 1 || port > 65535) {
+  throw new Error("PORT must be an integer between 1 and 65535");
+}
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.FRONTEND_URL,
+].filter(
   (origin: string | undefined): origin is string => origin !== undefined,
 );
 
