@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root { --background: 210 40% 98%; --foreground: 222 47% 11%; --card: 0 0% 100%; --primary: 222 47% 11%; --primary-foreground: 210 40% 98%; --muted-foreground: 215 16% 47%; --accent: 210 40% 96%; --input: 214 32% 91%; }
+  * { @apply border-input; }
+  body { @apply bg-background text-foreground; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+}
