@@ -83,13 +83,15 @@ export async function getArchivalForecast(
   }
 
   const issueStart = assertIssueDate(issueDate);
-  const issueEnd = addHours(issueStart, horizonHours - 1);
+  // issueDate is the forecast issue date; the forecast window starts on the next day.
+  const forecastStart = addHours(issueStart, 24);
+  const forecastEnd = addHours(forecastStart, horizonHours - 1);
   const windVariable = getWindVariable(hubHeight_m);
   const query = new URLSearchParams({
     latitude: String(latitude),
     longitude: String(longitude),
-    start_date: issueDate,
-    end_date: toDateOnly(issueEnd),
+    start_date: toDateOnly(forecastStart),
+    end_date: toDateOnly(forecastEnd),
     hourly: windVariable,
     timezone: "UTC",
     wind_speed_unit: "ms",
@@ -107,7 +109,7 @@ export async function getArchivalForecast(
 
   const payload: unknown = await response.json();
   const parsed = parseHourlyResponse(payload, windVariable);
-  const issueEndTimestamp = issueStart.getTime() + horizonHours * 60 * 60 * 1000;
+  const forecastEndTimestamp = forecastStart.getTime() + horizonHours * 60 * 60 * 1000;
 
   return parsed.hourly.time
     .map((timestamp: string, index: number): ArchivalForecastPoint => ({
@@ -116,6 +118,6 @@ export async function getArchivalForecast(
     }))
     .filter((point: ArchivalForecastPoint) => {
       const timestamp = Date.parse(point.timestamp);
-      return timestamp >= issueStart.getTime() && timestamp < issueEndTimestamp;
-    });
+      return timestamp >= forecastStart.getTime() && timestamp < forecastEndTimestamp;
+  });
 }
