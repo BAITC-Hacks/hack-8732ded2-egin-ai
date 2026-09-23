@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { getDatasetCsv } from "../../storage/datasetDb.js";
 
 export type TurbineId = "turbine-1" | "turbine-2";
 
@@ -205,9 +206,27 @@ export async function loadDataset(
   turbineId: TurbineId,
 ): Promise<DatasetLoadResult> {
   const content = await fs.readFile(filePath, "utf8");
+  return parseDatasetContent(content, filePath, turbineId);
+}
+
+async function loadDatasetFromStorageOrFile(
+  filePath: string,
+  turbineId: TurbineId,
+): Promise<DatasetLoadResult> {
+  const storedContent = await getDatasetCsv(turbineId);
+  return storedContent === null
+    ? loadDataset(filePath, turbineId)
+    : parseDatasetContent(storedContent, `SQLite:${turbineId}`, turbineId);
+}
+
+function parseDatasetContent(
+  content: string,
+  sourceLabel: string,
+  turbineId: TurbineId,
+): DatasetLoadResult {
   const rows = parseCsvRecords(content);
   if (rows.length < 2) {
-    throw new Error(`CSV file has no data rows: ${filePath}`);
+    throw new Error(`CSV file has no data rows: ${sourceLabel}`);
   }
 
   const columnIndexes = findColumnIndexes(rows[0].values);
@@ -229,14 +248,14 @@ export async function loadDataset(
     if (timestamp === null || windSpeed === null || normalizedPower === null || temperature === null) {
       invalidRows += 1;
       droppedRows += 1;
-      console.warn(`[dataset] Dropped ${filePath}:${row.lineNumber}: missing or invalid value`);
+      console.warn(`[dataset] Dropped ${sourceLabel}:${row.lineNumber}: missing or invalid value`);
       continue;
     }
 
     if (seenTimestamps.has(timestamp)) {
       duplicateRows += 1;
       droppedRows += 1;
-      console.warn(`[dataset] Dropped ${filePath}:${row.lineNumber}: duplicate timestamp ${rawTimestamp}`);
+      console.warn(`[dataset] Dropped ${sourceLabel}:${row.lineNumber}: duplicate timestamp ${rawTimestamp}`);
       continue;
     }
 
@@ -252,14 +271,14 @@ export async function loadDataset(
     if (!isInOfficialWindow) {
       outOfWindowRows += 1;
       droppedRows += 1;
-      console.warn(`[dataset] Dropped ${filePath}:${row.lineNumber}: timestamp outside official train/test window`);
+      console.warn(`[dataset] Dropped ${sourceLabel}:${row.lineNumber}: timestamp outside official train/test window`);
       continue;
     }
 
     if (!isInPlausibleRange) {
       invalidRows += 1;
       droppedRows += 1;
-      console.warn(`[dataset] Dropped ${filePath}:${row.lineNumber}: value outside plausible range`);
+      console.warn(`[dataset] Dropped ${sourceLabel}:${row.lineNumber}: value outside plausible range`);
       continue;
     }
 
@@ -317,7 +336,7 @@ export async function loadDataset(
 }
 
 export async function loadTurbineDataset(turbineId: TurbineId): Promise<DatasetLoadResult> {
-  return loadDataset(path.join(DEFAULT_DATA_DIRECTORY, FILES_BY_TURBINE[turbineId]), turbineId);
+  return loadDatasetFromStorageOrFile(path.join(DEFAULT_DATA_DIRECTORY, FILES_BY_TURBINE[turbineId]), turbineId);
 }
 
 export async function loadAllDatasets(
@@ -326,7 +345,9 @@ export async function loadAllDatasets(
   const entries = await Promise.all(
     (Object.entries(FILES_BY_TURBINE) as Array<[TurbineId, string]>).map(
       async ([turbineId, fileName]: [TurbineId, string]): Promise<[TurbineId, DatasetLoadResult]> => {
-        const result = await loadDataset(path.join(dataDirectory, fileName), turbineId);
+        const result = dataDirectory === DEFAULT_DATA_DIRECTORY
+          ? await loadTurbineDataset(turbineId)
+          : await loadDataset(path.join(dataDirectory, fileName), turbineId);
         return [turbineId, result];
       },
     ),

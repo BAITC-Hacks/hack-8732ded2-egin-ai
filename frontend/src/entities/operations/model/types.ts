@@ -47,3 +47,9 @@ export interface CalibrationResponse {
   powerScale: "normalized";
   turbines: Record<TurbineId, CalibrationTurbineResult>;
 }
+
+export interface DatasetUploadResponse {
+  status: "success";
+  uploaded: TurbineId[];
+  message: string;
+}

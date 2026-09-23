@@ -8,6 +8,7 @@ import { predictPower } from "../models/powerCurve.js";
 import type { PowerCurveParameters } from "../models/types.js";
 import type { TurbineCoordinates } from "../weather/types.js";
 import { parseForecastHorizon } from "../config/forecast.js";
+import { buildSingleRunUrl } from "../weather/client.js";
 
 const parameters: PowerCurveParameters = {
   Cp: 1,
@@ -40,6 +41,22 @@ function createAgentRun(turbineId: "turbine-1" | "turbine-2", hourly: AgentForec
 }
 
 describe("power curve and metrics", () => {
+  it("builds an issue-date-specific Single Runs API request", () => {
+    const url = buildSingleRunUrl(
+      "https://single-runs-api.open-meteo.com/v1/forecast",
+      coordinates.latitude,
+      coordinates.longitude,
+      "2026-01-31",
+      48,
+      "wind_speed_80m",
+    );
+    assert.equal(url.searchParams.get("run"), "2026-01-31T00:00");
+    assert.equal(url.searchParams.get("models"), "ecmwf_ifs");
+    assert.equal(url.searchParams.get("forecast_hours"), "72");
+    assert.equal(url.searchParams.get("hourly"), "wind_speed_80m");
+    assert.equal(url.hostname, "single-runs-api.open-meteo.com");
+  });
+
   it("accepts only the required 24 to 48 hour forecast horizon", () => {
     assert.equal(parseForecastHorizon(24, "horizon"), 24);
     assert.equal(parseForecastHorizon(48, "horizon"), 48);

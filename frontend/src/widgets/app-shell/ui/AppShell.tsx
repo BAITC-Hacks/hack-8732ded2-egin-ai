@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { Activity, BarChart3, Database, LayoutDashboard, Settings2 } from "lucide-react";
+import { Activity, BarChart3, Database, Settings2 } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -36,7 +36,6 @@ export function AppShell(): ReactElement {
       <div className="mx-auto grid max-w-[1500px] gap-6 p-4 sm:p-8 lg:grid-cols-[280px_1fr]">
         <aside className="space-y-4">
           <nav className="rounded-2xl border bg-slate-950 p-3 text-slate-300">
-            <NavLink to="/forecast" className={({ isActive }) => `mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm ${isActive ? "bg-white/10 text-white" : "text-slate-400"}`}><LayoutDashboard className="h-4 w-4" /><span>{t("nav.dashboard")}</span></NavLink>
             {navigation.map((item: NavigationItem) => <NavLink key={item.path} to={item.path} className={({ isActive }) => `mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm ${isActive ? "bg-white/10 text-white" : "text-slate-400"}`}>{item.icon}<span>{item.label}</span></NavLink>)}
           </nav>
           <div className="rounded-2xl border bg-white p-4"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("mode.label")}</p><p className="mt-2 font-semibold">{t("mode.value")}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{t("mode.description")}</p></div>

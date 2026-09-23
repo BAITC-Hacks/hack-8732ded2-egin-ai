@@ -5,3 +5,4 @@ dist/
 !.env.example
 *.log
 backend/src/data/*.csv
+backend/src/data/*.sqlite
