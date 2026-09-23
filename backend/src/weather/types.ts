@@ -37,13 +37,16 @@ export interface WalkForwardTurbineMetrics {
   evaluatedHours: number;
 }
 
+export type WalkForwardMetricsStatus = "actual_data_available" | "actual_data_unavailable";
+
 export interface WalkForwardResponse {
   status: "success";
   source: "open-meteo-single-run";
   period: "2026-01-31 to 2026-02-28";
   powerScale: "normalized";
   dailyForecasts: DailyForecastResult[];
-  overallMetrics: Record<TurbineId, WalkForwardTurbineMetrics>;
+  overallMetrics: Record<TurbineId, WalkForwardTurbineMetrics> | null;
+  metricsStatus: WalkForwardMetricsStatus;
 }
 
 export interface OpenMeteoHourlyResponse {

@@ -72,6 +72,18 @@ export function WindFarmDashboard({ result }: WindFarmDashboardProps): ReactElem
           <CardContent className="space-y-4"><p className="text-base leading-7 text-slate-800">{farm.recommendation}</p><div className="flex items-center gap-2 text-xs text-muted-foreground"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> {lowConfidenceHours} {t("dashboard.lowConfidence")} {t("dashboard.attention")}</div></CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader><CardTitle>Agentic cycle</CardTitle><p className="text-sm text-muted-foreground">The same orchestration loop runs independently for each turbine.</p></CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-2">
+          {Object.entries(result.agentRuns).map(([turbineId, agentRun]) => (
+            <div key={turbineId} className="rounded-xl bg-slate-50 p-4">
+              <p className="mb-3 text-sm font-semibold text-slate-900">{turbineId}</p>
+              <div className="flex flex-wrap gap-2">{agentRun?.steps.map((step: string) => <span key={step} className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"><CheckCircle2 className="mr-1 inline h-3 w-3" />{step}</span>)}</div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 }
