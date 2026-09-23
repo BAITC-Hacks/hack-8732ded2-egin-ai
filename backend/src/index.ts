@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import { logger } from "./logger.js";
+import calibrationRouter from "./routes/calibration.js";
 import datasetRouter from "./routes/dataset.js";
 
 dotenv.config({
@@ -18,7 +19,7 @@ const allowedOrigins = ["http://localhost:5173", process.env.FRONTEND_URL].filte
 app.use(
   cors({
     origin: allowedOrigins,
-    methods: ["GET"],
+    methods: ["GET", "POST"],
     credentials: false,
   }),
 );
@@ -29,6 +30,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/dataset", datasetRouter);
+app.use("/api/calibrate", calibrationRouter);
 
 app.listen(port, () => {
   logger.info("Backend started", {
