@@ -5,6 +5,7 @@ import express from "express";
 import { logger } from "./logger.js";
 import calibrationRouter from "./routes/calibration.js";
 import datasetRouter from "./routes/dataset.js";
+import walkForwardRouter from "./routes/walkForward.js";
 
 dotenv.config({
   path: fileURLToPath(new URL("../.env", import.meta.url)),
@@ -31,6 +32,7 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/dataset", datasetRouter);
 app.use("/api/calibrate", calibrationRouter);
+app.use("/api/walk-forward-simulate", walkForwardRouter);
 
 app.listen(port, () => {
   logger.info("Backend started", {
