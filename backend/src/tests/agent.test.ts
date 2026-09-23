@@ -7,6 +7,7 @@ import { calculateMetrics } from "../models/metrics.js";
 import { predictPower } from "../models/powerCurve.js";
 import type { PowerCurveParameters } from "../models/types.js";
 import type { TurbineCoordinates } from "../weather/types.js";
+import { parseForecastHorizon } from "../config/forecast.js";
 
 const parameters: PowerCurveParameters = {
   Cp: 1,
@@ -39,6 +40,13 @@ function createAgentRun(turbineId: "turbine-1" | "turbine-2", hourly: AgentForec
 }
 
 describe("power curve and metrics", () => {
+  it("accepts only the required 24 to 48 hour forecast horizon", () => {
+    assert.equal(parseForecastHorizon(24, "horizon"), 24);
+    assert.equal(parseForecastHorizon(48, "horizon"), 48);
+    assert.throws(() => parseForecastHorizon(23, "horizon"), /between 24 and 48/);
+    assert.throws(() => parseForecastHorizon(49, "horizon"), /between 24 and 48/);
+  });
+
   it("calculates MAE and RMSE from normalized predictions", () => {
     const metrics = calculateMetrics([
       { actual: 0, predicted: 0.1 },

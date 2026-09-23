@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from "express";
 import type { TurbineId } from "../agent/tools/dataset.js";
 import type { HubHeightMeters, TurbineCoordinates, WalkForwardConfig } from "../weather/types.js";
 import { runWalkForwardSimulation } from "../services/walkForward.js";
+import { parseForecastHorizon } from "../config/forecast.js";
 
 const router = Router();
 const TURBINE_IDS: readonly TurbineId[] = ["turbine-1", "turbine-2"];
@@ -70,15 +71,7 @@ function parseRequest(body: unknown): WalkForwardConfig {
   }
 
   const horizonValue = requestBody.horizonHours ?? 48;
-  if (
-    typeof horizonValue !== "number" ||
-    !Number.isInteger(horizonValue) ||
-    horizonValue < 24 ||
-    horizonValue > 48
-  ) {
-    throw new Error("horizonHours must be an integer between 24 and 48");
-  }
-  return { coordinates, horizonHours: horizonValue };
+  return { coordinates, horizonHours: parseForecastHorizon(horizonValue, "horizonHours") };
 }
 
 router.post("/", async (request: Request, response: Response): Promise<void> => {

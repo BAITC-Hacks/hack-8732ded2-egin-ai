@@ -5,6 +5,7 @@ import type { ForecastConfidence, AgentAnalysis, AgentForecastPoint, AgentRunCon
 import { analyzeWithOpenAi } from "./llm.js";
 import type { AnalysisPromptInput, ParsedAnalysis } from "./prompts.js";
 import { predictPower } from "../models/powerCurve.js";
+import { MAX_FORECAST_HOURS, MIN_FORECAST_HOURS } from "../config/forecast.js";
 
 function getRatedTransitionSpeed(cutIn_ms: number, cutOut_ms: number): number {
   return cutIn_ms + (cutOut_ms - cutIn_ms) * 0.35;
@@ -34,9 +35,10 @@ function classifyConfidence(
 
 function prepareWeatherData(
   points: Awaited<ReturnType<typeof getArchivalForecast>>,
+  horizonHours: number,
 ): Awaited<ReturnType<typeof getArchivalForecast>> {
-  if (points.length === 0) {
-    throw new Error("Archival forecast returned no hourly points");
+  if (points.length !== horizonHours) {
+    throw new Error(`Archival forecast returned ${points.length} hourly points; expected ${horizonHours}`);
   }
   const prepared = [...points].sort(
     (first, second) => Date.parse(first.timestamp) - Date.parse(second.timestamp),
@@ -91,6 +93,13 @@ async function analyzeForecast(input: AnalysisPromptInput, forecast: AgentForeca
 }
 
 export async function runAgentCycle(config: AgentRunConfig): Promise<AgentRunResponse> {
+  if (
+    !Number.isInteger(config.horizonHours) ||
+    config.horizonHours < MIN_FORECAST_HOURS ||
+    config.horizonHours > MAX_FORECAST_HOURS
+  ) {
+    throw new Error(`horizonHours must be an integer between ${MIN_FORECAST_HOURS} and ${MAX_FORECAST_HOURS}`);
+  }
   const steps: AgentRunResponse["steps"] = [];
 
   const weather = await getArchivalForecast(
@@ -102,7 +111,7 @@ export async function runAgentCycle(config: AgentRunConfig): Promise<AgentRunRes
   );
   steps.push("weather_fetched");
 
-  const preparedWeather = prepareWeatherData(weather);
+  const preparedWeather = prepareWeatherData(weather, config.horizonHours);
   steps.push("data_prepared");
 
   const calibration = calibrateTurbine(config.turbineId, config.trainPoints);
