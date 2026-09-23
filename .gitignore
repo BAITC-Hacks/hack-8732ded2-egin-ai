@@ -4,4 +4,4 @@ dist/
 .env.*
 !.env.example
 *.log
-
+backend/src/data/*.csv
