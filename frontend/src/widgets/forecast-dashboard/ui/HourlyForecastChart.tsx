@@ -1,5 +1,6 @@
 import type { FarmHourlyBusinessImpact } from "@/entities/wind-farm/model/types";
 import type { ReactElement } from "react";
+import { useTranslation } from "react-i18next";
 
 interface HourlyForecastChartProps {
   points: FarmHourlyBusinessImpact[];
@@ -10,6 +11,7 @@ function formatHour(timestamp: string): string {
 }
 
 export function HourlyForecastChart({ points }: HourlyForecastChartProps): ReactElement {
+  const { t } = useTranslation();
   const width = 760;
   const height = 230;
   const padding = 28;
@@ -26,8 +28,8 @@ export function HourlyForecastChart({ points }: HourlyForecastChartProps): React
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>Forecast power, kW</span>
-        <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-cyan-500" /> predicted generation</span>
+        <span>{t("dashboard.powerScale")}</span>
+        <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-cyan-500" /> {t("dashboard.predictedGeneration")}</span>
       </div>
       <svg className="h-auto w-full overflow-visible" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Hourly wind farm power forecast">
         <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="hsl(var(--border))" />

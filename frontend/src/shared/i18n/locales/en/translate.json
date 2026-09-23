@@ -1,0 +1,12 @@
+{
+  "app": { "title": "WINDCAST AI", "subtitle": "Wind farm control center", "apiConnected": "API connected", "workspace": "Operator workspace" },
+  "nav": { "dashboard": "Dashboard", "forecast": "Forecast", "dataQuality": "Data quality", "calibration": "Calibration" },
+  "mode": { "label": "Current mode", "value": "Historical simulation", "description": "Forecasts are issued as if the system were running day by day." },
+  "form": {
+    "title": "Forecast configuration", "description": "Run the VPP forecast cycle for the selected issue date.", "issueDate": "Issue date", "horizon": "Forecast horizon", "hours24": "24 hours", "hours48": "48 hours", "coordinates": "Turbine coordinates", "latitude": "Latitude", "longitude": "Longitude", "hubHeight": "Hub height, m", "ratedPower": "Rated power, kW", "sameSite": "These coordinates are applied to both turbines when the farm is configured as one site.", "electricityPrice": "Electricity price, $/MWh", "imbalancePenalty": "Imbalance penalty, $/MWh", "committedPower": "Committed power, kW", "run": "Run forecast", "running": "Running agent cycle...", "nextDay": "Forecast starts the day after the issue date." 
+  },
+  "dashboard": { "overview": "Wind farm overview", "title": "Operational forecast", "description": "Turn hourly wind predictions into dispatch and revenue decisions.", "issueDate": "Issue date", "hourlyTitle": "Hourly wind farm forecast", "powerScale": "Forecast power, kW", "predictedGeneration": "predicted generation", "turbineStatus": "Wind turbine status", "agentRecommendation": "Agent recommendation", "noForecast": "No forecast run yet", "noForecastDescription": "Configure the wind farm on the left to see hourly generation, risk and recommended action.", "expectedGeneration": "Expected generation", "expectedRevenue": "Expected revenue", "imbalanceRisk": "Imbalance risk", "potentialPenalty": "Potential penalty", "lowConfidence": "low-confidence hours", "rampEvents": "ramp events", "attention": "hours require closer operational attention." },
+  "risk": { "low": "low", "medium": "medium", "high": "high", "suffix": "risk" },
+  "errors": { "unableToRun": "Unable to run forecast", "number": "{{label}} must be a valid number" },
+  "languages": { "ru": "Русский", "en": "English", "kk": "Қазақша" }
+}
