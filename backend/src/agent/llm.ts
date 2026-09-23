@@ -55,7 +55,9 @@ export async function analyzeWithOpenAi(input: AnalysisPromptInput): Promise<Par
     body: JSON.stringify({
       model: process.env.OPENAI_MODEL ?? "gpt-5",
       input: buildAnalysisPrompt(input),
-      max_output_tokens: 500,
+      reasoning: { effort: "minimal" },
+      text: { format: { type: "json_object" } },
+      max_output_tokens: 800,
     }),
   });
   if (!response.ok) {
